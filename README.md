@@ -28,6 +28,9 @@ The WAX blockchain has positioned itself as a gaming-focused blockchain, with bi
 
     ```bash
     git clone https://github.com/Blacklusion/WAX-Blockchain-NFT-Museum
+    ```
+    
+    ```bash
     cd WAX-Blockchain-NFT-Museum
     ```
 
