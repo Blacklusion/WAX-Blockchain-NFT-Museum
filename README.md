@@ -66,6 +66,9 @@ This project is highly customizable, allowing you to adapt it to your needs:
 
 Contributions are welcome! Whether it's reporting bugs, suggesting features, or submitting pull requests, your involvement is appreciated.
 
+## Funded by WAX Labs
+This project was funded by WAX Labs, an initiative by the WAX blockchain that provides grants to innovative projects aimed at expanding and enhancing the WAX ecosystem. WAX Labs supports developers, creators, and entrepreneurs who are building tools, applications, and experiences that contribute to the growth and adoption of the WAX blockchain, fostering a thriving Web3 community.
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](/LICENSE) file for details.
