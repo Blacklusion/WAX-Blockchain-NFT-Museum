@@ -45,7 +45,8 @@ public static class Debug
     {
     }
 
-    public static void LogFormat(LogType logType, LogOption logOptions, Object context, string format, params object[] args)
+    public static void LogFormat(LogType logType, LogOption logOptions, Object context, string format,
+        params object[] args)
     {
     }
 

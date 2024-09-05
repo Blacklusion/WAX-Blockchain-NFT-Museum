@@ -106,7 +106,7 @@ namespace WebP.Experiment.Animation
         public static unsafe List<(Texture2D, int)> LoadAnimation(ref byte[] data, bool isUsingSoftwareFlip = false)
         {
             List<(Texture2D, int)> ret = new List<(Texture2D, int)>();
- 
+
             WebPAnimDecoderOptions option = new WebPAnimDecoderOptions
             {
                 use_threads = 0,
@@ -134,6 +134,7 @@ namespace WebP.Experiment.Animation
                 uint size = anim_info.canvas_width * 4 * anim_info.canvas_height;
 
                 int timestamp = 0;
+                int previousTimestamp = 0;
 
                 IntPtr pp = new IntPtr();
                 byte** unmanagedPointer = (byte**)&pp;
@@ -151,10 +152,8 @@ namespace WebP.Experiment.Animation
                     texture.LoadRawTextureData(pp, (int)size);
 
                     if (isUsingSoftwareFlip)
-                    {// Flip updown.
-                     // ref: https://github.com/netpyoung/unity.webp/issues/25
-                     // ref: https://github.com/netpyoung/unity.webp/issues/21
-                     // ref: https://github.com/webmproject/libwebp/blob/master/src/demux/anim_decode.c#L309
+                    {
+                        // Flip texture vertically.
                         Color[] pixels = texture.GetPixels();
                         Color[] pixelsFlipped = new Color[pixels.Length];
                         for (int y = 0; y < anim_info.canvas_height; y++)
@@ -165,7 +164,12 @@ namespace WebP.Experiment.Animation
                     }
 
                     texture.Apply();
-                    ret.Add((texture, timestamp));
+
+                    // Calculate the delay between frames.
+                    int delay = i == 0 ? 0 : timestamp - previousTimestamp;
+                    previousTimestamp = timestamp;
+
+                    ret.Add((texture, delay));
                 }
                 NativeLibwebpdemux.WebPAnimDecoderReset(dec);
                 NativeLibwebpdemux.WebPAnimDecoderDelete(dec);

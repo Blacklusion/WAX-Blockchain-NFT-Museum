@@ -21,6 +21,7 @@ public class ImageData
     public ImageFormat ImgFormat;
     public List<(Texture2D, int)> webpAnimation;
 }
+
 public class CanvasManager : MonoBehaviour
 {
     [Inject(Id = "nftDetailParent")] private readonly CanvasGroup nftDetailParent;
@@ -38,7 +39,11 @@ public class CanvasManager : MonoBehaviour
 
     public void AddCanvas(CanvasObject cO)
     {
-        if (canvases.Contains(cO)) { return; }
+        if (canvases.Contains(cO))
+        {
+            return;
+        }
+
         canvases.Add(cO);
     }
 
@@ -49,15 +54,16 @@ public class CanvasManager : MonoBehaviour
 
     public async UniTask InitCanvases()
     {
-        await AsyncInitCanvases();       
+        await AsyncInitCanvases();
     }
 
     public void ResetCanvases()
     {
         for (int i = 0; i < canvases.Count; i++)
-        {  
+        {
             canvases[i].ResetCanvas();
         }
+
         LoadedImages.Clear();
     }
 
@@ -66,11 +72,14 @@ public class CanvasManager : MonoBehaviour
         var data = walletLoader.GetItems();
         int roomOffset = GetTotalCanvas();
 
-      
 
         for (int i = 0; i < roomOffset; i++)
         {
-            if (data.Count <= i) { break; }
+            if (data.Count <= i)
+            {
+                break;
+            }
+
             await canvases[i].Init(data.Values.ElementAt(i), data.Keys.ElementAt(i));
 
             if (data.Count > 0)
@@ -83,28 +92,25 @@ public class CanvasManager : MonoBehaviour
             }
         }
 
-      
+
         loadingLbl.text = "";
     }
 
     public async UniTask SetUIAnimation(List<Texture2D> mFrames, List<float> mFrameDelay)
-{
-    if (mFrames == null || mFrames.Count == 0) { return; } // no animation to load, ignore
-
-    int mCurFrame = 0;
-
-    // Loop until the parent object is inactive
-    while (nftDetailParent.gameObject.activeSelf)
     {
-        // Set the current frame texture
-        nftImage.texture = mFrames[mCurFrame];
+        if (mFrames == null || mFrames.Count == 0)
+        {
+            return;
+        } // no animation to load, ignore
 
-        // Wait for the duration of the current frame delay
-        Debug.Log("waiting " + (int)(mFrameDelay[mCurFrame] * 10000));
-        await UniTask.Delay((int)(mFrameDelay[mCurFrame] * 10000));
+        int mCurFrame = 0;
 
-        // Move to the next frame, loop back to the start if at the end
-        mCurFrame = (mCurFrame + 1) % mFrames.Count;
+        // Loop until the parent object is inactive
+        while (nftDetailParent.gameObject.activeSelf)
+        {
+            nftImage.texture = mFrames[mCurFrame];
+            await UniTask.Delay((int)(mFrameDelay[mCurFrame] * 1000));
+            mCurFrame = (mCurFrame + 1) % mFrames.Count;
+        }
     }
-}
 }

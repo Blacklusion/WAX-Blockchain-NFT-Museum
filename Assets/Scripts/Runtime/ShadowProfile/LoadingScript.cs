@@ -16,7 +16,11 @@ public class LoadingScript : MonoBehaviour
 
     private async UniTask LoadingScreen()
     {
-        if (isRunning) { return; }
+        if (isRunning)
+        {
+            return;
+        }
+
         isRunning = true;
         while (this.transform.parent.gameObject.activeSelf)
         {
@@ -25,9 +29,15 @@ public class LoadingScript : MonoBehaviour
                 LoadingLbl.text = "Loading " + new string('•', i).Replace("•", "<color=#4EC6E1>•</color> ");
                 await UniTask.Delay(Rate);
 
-                if (!this.transform.parent.gameObject.activeSelf) break; // Break the loop if loading is no longer needed
+                if (!this.transform.parent.gameObject.activeSelf)
+                    break; // Break the loop if loading is no longer needed
             }
         }
-        if (!this.gameObject.activeSelf) { isRunning = false; return; }
+
+        if (!this.gameObject.activeSelf)
+        {
+            isRunning = false;
+            return;
+        }
     }
 }

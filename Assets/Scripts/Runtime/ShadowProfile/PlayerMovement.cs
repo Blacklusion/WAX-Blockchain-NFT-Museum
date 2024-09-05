@@ -57,6 +57,7 @@ public class PlayerMovement : MonoBehaviour
                 return true;
             }
         }
+
         return false;
     }
 
@@ -73,7 +74,11 @@ public class PlayerMovement : MonoBehaviour
             }
 
             CanvasObject canvasObject = hit.collider.GetComponent<CanvasObject>();
-            if (!canvasObject.HasImage()) { return; }
+            if (!canvasObject.HasImage())
+            {
+                return;
+            }
+
             interactionLbl.text = "Press [e] to toggle interaction";
         }
     }
@@ -98,7 +103,8 @@ public class PlayerMovement : MonoBehaviour
                     bobbingTimer += Time.deltaTime * (velocity.magnitude * 2.6f);
                     float bobbingOffsetY = Mathf.Sin(bobbingTimer) * 0.035f;
                     float bobbingOffsetX = Mathf.Cos(bobbingTimer / 2) * 0.025f;
-                    mainCamera.transform.localPosition = new Vector3(defaultCameraPosition.x + bobbingOffsetX, defaultCameraPosition.y + bobbingOffsetY, defaultCameraPosition.z);
+                    mainCamera.transform.localPosition = new Vector3(defaultCameraPosition.x + bobbingOffsetX,
+                        defaultCameraPosition.y + bobbingOffsetY, defaultCameraPosition.z);
                 }
                 else
                 {
@@ -106,7 +112,8 @@ public class PlayerMovement : MonoBehaviour
                     velocity = Vector3.zero;
 
                     // Reset bobbing effect smoothly
-                    mainCamera.transform.localPosition = Vector3.Lerp(mainCamera.transform.localPosition, defaultCameraPosition, Time.deltaTime * 8.0f);
+                    mainCamera.transform.localPosition = Vector3.Lerp(mainCamera.transform.localPosition,
+                        defaultCameraPosition, Time.deltaTime * 8.0f);
                     bobbingTimer = 0; // Optionally, reset the bobbing timer
                 }
 
@@ -143,7 +150,8 @@ public class PlayerMovement : MonoBehaviour
                 else
                 {
                     canMove = true;
-                    nftDetailParent.DOFade(0.0f, 0.3f).OnComplete(() => { nftDetailParent.gameObject.SetActive(false); });
+                    nftDetailParent.DOFade(0.0f, 0.3f)
+                        .OnComplete(() => { nftDetailParent.gameObject.SetActive(false); });
                 }
             }
 
@@ -152,7 +160,8 @@ public class PlayerMovement : MonoBehaviour
                 if (!canMove)
                 {
                     canMove = true;
-                    nftDetailParent.DOFade(0.0f, 0.3f).OnComplete(() => { nftDetailParent.gameObject.SetActive(false); });
+                    nftDetailParent.DOFade(0.0f, 0.3f)
+                        .OnComplete(() => { nftDetailParent.gameObject.SetActive(false); });
                 }
             }
         }

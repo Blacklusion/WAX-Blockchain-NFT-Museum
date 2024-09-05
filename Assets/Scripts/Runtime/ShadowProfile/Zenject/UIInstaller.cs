@@ -7,15 +7,15 @@ namespace ShadowProfile
 {
     public class UIInstaller : MonoInstaller
     {
-        [Header("MANAGERS")]
-        [SerializeField] private WalletLoader walletLoader;
+        [Header("MANAGERS")] [SerializeField] private WalletLoader walletLoader;
         [SerializeField] private CanvasManager canvasManager;
         [SerializeField] private CoreLogic coreLogic;
         [SerializeField] private PlayerMovement player;
 
 
-        [Header("UI ELEMENTS")]
-        [SerializeField] private TMP_InputField walletAddress;
+        [Header("UI ELEMENTS")] [SerializeField]
+        private TMP_InputField walletAddress;
+
         [SerializeField] private Toggle canShowRepeated;
         [SerializeField] private Button enterMuseumBtn;
         [SerializeField] private Button showWalletBtn;
@@ -29,8 +29,9 @@ namespace ShadowProfile
         [SerializeField] private TextMeshProUGUI loadingLbl;
 
 
-        [Header("UI ELEMENTS - SIDEBAR")]
-        [SerializeField] private CanvasGroup inGameUI;
+        [Header("UI ELEMENTS - SIDEBAR")] [SerializeField]
+        private CanvasGroup inGameUI;
+
         [SerializeField] private Button nextPageBtn;
         [SerializeField] private Button prevPageBtn;
         [SerializeField] private Button jumpPageBtn;
@@ -40,8 +41,9 @@ namespace ShadowProfile
         [SerializeField] private TextMeshProUGUI pageStatusLbl;
         [SerializeField] private TMP_InputField jumpPageLbl;
 
-        [Header("UI ELEMENTS - NFT DETAILS")]
-        [SerializeField] private CanvasGroup nftDetailParent;
+        [Header("UI ELEMENTS - NFT DETAILS")] [SerializeField]
+        private CanvasGroup nftDetailParent;
+
         [SerializeField] private TextMeshProUGUI nftName;
         [SerializeField] private TextMeshProUGUI nftRarity;
         [SerializeField] private TextMeshProUGUI nftDescription;
@@ -49,7 +51,7 @@ namespace ShadowProfile
         [SerializeField] private TextMeshProUGUI nftCollection;
         [SerializeField] private RawImage nftImage;
 
-        
+
         public override void InstallBindings()
         {
             // Managers

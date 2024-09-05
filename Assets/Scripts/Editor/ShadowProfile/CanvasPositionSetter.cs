@@ -4,8 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(CanvasObject))]
-[CanEditMultipleObjects] 
-
+[CanEditMultipleObjects]
 public class CanvasPositionSetter : Editor
 {
     public override void OnInspectorGUI()

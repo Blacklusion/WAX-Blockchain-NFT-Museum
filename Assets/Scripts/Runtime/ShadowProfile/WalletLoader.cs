@@ -10,74 +10,59 @@ using System.Linq;
 
 
 #region JSON Class
+
 public class AccountInfo
 {
-    [JsonProperty("success")]
-    public string Success;
-    [JsonProperty("data")]
-    public string Data;
+    [JsonProperty("success")] public string Success;
+    [JsonProperty("data")] public string Data;
 }
 
 public class CollectionsResultData
 {
-    [JsonProperty("success")]
-    public string Success;
+    [JsonProperty("success")] public string Success;
 
-    [JsonProperty("data")]
-    public CollectionData Data;
+    [JsonProperty("data")] public CollectionData Data;
 }
 
 public class CollectionData
 {
-    [JsonProperty("collections")]
-    public List<CollectionHolder> Collections = new();
+    [JsonProperty("collections")] public List<CollectionHolder> Collections = new();
 }
 
 public class CollectionHolder
 {
-    [JsonProperty("collection")]
-    public Collection Coll;
+    [JsonProperty("collection")] public Collection Coll;
 }
 
 public class Collection
 {
-    [JsonProperty("name")]
-    public string Name;
-    [JsonProperty("collection_name")]
-    public string WalletName;
+    [JsonProperty("name")] public string Name;
+    [JsonProperty("collection_name")] public string WalletName;
 }
 
 public class ResultData
 {
-    [JsonProperty("success")]
-    public string Success;
+    [JsonProperty("success")] public string Success;
 
-    [JsonProperty("data")]
-    public List<NFTData> Data = new();
+    [JsonProperty("data")] public List<NFTData> Data = new();
 }
 
 public class NFTData
 {
-    [JsonProperty("data")]
-    public NFDataDetails Details;
+    [JsonProperty("data")] public NFDataDetails Details;
 
-    [JsonProperty("collection")]
-    public Collection Coll;
+    [JsonProperty("collection")] public Collection Coll;
 
-    [JsonProperty("template")]
-    public NFTTemplate Template;
+    [JsonProperty("template")] public NFTTemplate Template;
 }
 
 public class NFDataDetails
 {
-    [JsonProperty("img")]
-    private string img = string.Empty;
+    [JsonProperty("img")] private string img = string.Empty;
 
-    [JsonProperty("image")]
-    private string image = string.Empty;
+    [JsonProperty("image")] private string image = string.Empty;
 
-    [JsonProperty("video")]
-    private string video = string.Empty;
+    [JsonProperty("video")] private string video = string.Empty;
 
     public string Image
     {
@@ -98,21 +83,20 @@ public class NFDataDetails
         }
     }
 
-    [JsonProperty("name")]
-    public string Name;
+    [JsonProperty("name")] public string Name;
 
-    [JsonProperty("rarity")]
-    public string Rarity;
+    [JsonProperty("rarity")] public string Rarity;
 
-    [JsonProperty("description")]
-    public string Description;
+    [JsonProperty("description")] public string Description;
 }
+
 public class NFTTemplate
 {
-    [JsonProperty("template_id")]
-    public string ID;
+    [JsonProperty("template_id")] public string ID;
 }
+
 #endregion
+
 public class WalletLoader : MonoBehaviour
 {
     [Inject(Id = "walletAdd")] private readonly TMP_InputField walletAddress;
@@ -124,12 +108,14 @@ public class WalletLoader : MonoBehaviour
     private bool reachedEnd = false;
     private int pageNumber = 1;
     private int startIndexUnique = 0;
-    private int accountTotal = 0;
-    private HashSet<string> uniqueFilter = new();
+    private int walletTotalAssetCount = 0;
+    private bool uniqueOnly = false;
+    private HashSet<string> uniqueAssetsHashTable = new();
     private ResultData results = new();
     private CollectionsResultData collectionResults = new();
     public int CurrentPage { get; private set; } = 1;
 
+    // Allows to exclude templates -> Helpful for avoid requesting assets when uniqueOnly is turned on
     public HashSet<string> templateBlackList = new();
 
     public int TotalCanvasesToLoad
@@ -141,7 +127,7 @@ public class WalletLoader : MonoBehaviour
     public Dictionary<int, string> UniqueItems { get; private set; } = new();
     public Dictionary<int, string> AllItems { get; private set; } = new();
 
-    private void AllElementsHashTable()
+    private void AllAssetsHashTable()
     {
         int startIndex = AllItems.Count(); // make sure we're clean
 
@@ -151,23 +137,33 @@ public class WalletLoader : MonoBehaviour
         }
     }
 
-    public void ResetElements()
+    public void ResetAssets()
     {
-        uniqueFilter = new();
+        uniqueAssetsHashTable = new();
         results = new();
         startIndexUnique = 0;
         reachedEnd = false;
         UniqueItems = new();
         AllItems = new();
+        uniqueOnly = false;
+        templateBlackList = new();
+    }
+
+    public void ResetWallet()
+    {
+        walletTotalAssetCount = 0;
     }
 
     public void ResetPages()
     {
         pageNumber = 1;
+        CurrentPage = 1;
     }
 
-    public async UniTask FilterUnique()
+
+    public async UniTask GetWalletDataUnique()
     {
+        uniqueOnly = true;
         for (int i = startIndexUnique; i < results.Data.Count; i++)
         {
             if (UniqueItems.Count >= TotalCanvasesToLoad - 1)
@@ -175,30 +171,31 @@ public class WalletLoader : MonoBehaviour
                 break;
             }
 
-            NFDataDetails detail = results.Data[i].Details;
-            if (!string.IsNullOrEmpty(detail.Image))
+            NFDataDetails asset = results.Data[i].Details;
+            if (!string.IsNullOrEmpty(asset.Image))
             {
                 // If the hashtable does not contain the Image as a key, add it to the hashtable
-                if (!uniqueFilter.Contains(detail.Image))
+                if (!uniqueAssetsHashTable.Contains(asset.Image))
                 {
                     templateBlackList.Add(results.Data[i].Template.ID);
-                    uniqueFilter.Add(detail.Image);
-                    // Store the index of the NFDataDetails object in the list
-                    UniqueItems.Add(i, detail.Image);
+                    uniqueAssetsHashTable.Add(asset.Image);
+                    UniqueItems.Add(i, asset.Image);
                 }
             }
         }
 
-        startIndexUnique = results.Data.Count; // store the index for the next pass, that way we don't need to parse everything again
+        startIndexUnique = results.Data.Count;
 
-        if (UniqueItems.Count < TotalCanvasesToLoad - 1) // TODO calculate how many images we need yet to load to fill. If we have more than 100 spots, then request 100 at one time. 
+        if (UniqueItems.Count < TotalCanvasesToLoad - 1)
         {
-            if (reachedEnd) { return; } // no more stuff to load
+            if (reachedEnd)
+            {
+                return;
+            } // no more assets to load
 
-            // we can load more, try one more page
             pageNumber++;
             await GetWalletDataFull();
-            await FilterUnique();
+            await GetWalletDataUnique();
         }
     }
 
@@ -212,7 +209,7 @@ public class WalletLoader : MonoBehaviour
         await GetWalletCollections();
     }
 
-    public async UniTask  GetWalletCollections()
+    public async UniTask GetWalletCollections()
     {
         string result = await WebRequestHandler.GetAsync(Consts.BASE_COLLECTIONS_URL + walletAddress.text);
         collectionResults = JsonConvert.DeserializeObject<CollectionsResultData>(result);
@@ -245,20 +242,26 @@ public class WalletLoader : MonoBehaviour
     {
         string result = await WebRequestHandler.GetAsync(Consts.COUNT_URL + walletAddress.text);
         var info = JsonConvert.DeserializeObject<AccountInfo>(result);
-        accountTotal = int.Parse(info.Data);
+        walletTotalAssetCount = int.Parse(info.Data);
     }
 
     public async UniTask GetWalletDataFull()
     {
-        string url = string.Format(Consts.BASE_URL + "owner={0}&page={1}&limit={2}&order=desc&sort=asset_id&template_blacklist={3}", walletAddress.text, pageNumber, TotalCanvasesToLoad, GetBlackList());
+        string url =
+            string.Format(
+                Consts.BASE_URL + "owner={0}&page={1}&limit={2}&order=desc&sort=asset_id&template_blacklist={3}",
+                walletAddress.text, pageNumber, TotalCanvasesToLoad, GetBlackList());
 
         if (walletCollections.value > 0)
         {
             // -1 because list on dropdown starts at index 1 not 0. 
-            url = string.Format(Consts.BASE_URL + "collection_name={0}&owner={1}&page={2}&limit={3}&order=desc&sort=asset_id&template_blacklist={4}", collectionResults.Data.Collections[walletCollections.value - 1].Coll.WalletName, walletAddress.text, pageNumber, TotalCanvasesToLoad, GetBlackList());
+            url = string.Format(
+                Consts.BASE_URL +
+                "collection_name={0}&owner={1}&page={2}&limit={3}&order=desc&sort=asset_id&template_blacklist={4}",
+                collectionResults.Data.Collections[walletCollections.value - 1].Coll.WalletName, walletAddress.text,
+                pageNumber, TotalCanvasesToLoad, GetBlackList());
         }
 
-        Debug.Log(url);
         string result = await WebRequestHandler.GetAsync(url);
 
         var res = JsonConvert.DeserializeObject<ResultData>(result);
@@ -266,17 +269,21 @@ public class WalletLoader : MonoBehaviour
         if (res.Data.Count == 0)
         {
             reachedEnd = true;
-            AllElementsHashTable();
+            AllAssetsHashTable();
             return;
         }
 
         results.Data.AddRange(res.Data);
-        AllElementsHashTable();
+        AllAssetsHashTable();
     }
 
     private string GetBlackList()
     {
-        if (templateBlackList.Count == 0) { return string.Empty; }
+        if (templateBlackList.Count == 0)
+        {
+            return string.Empty;
+        }
+
         string blacklist = string.Empty;
 
         foreach (var item in templateBlackList)
@@ -289,8 +296,12 @@ public class WalletLoader : MonoBehaviour
 
     public async UniTask LoadNextPage()
     {
-        if (reachedEnd) { return; } // we can't load more pages, go back if you want
-        ResetElements();
+        if (reachedEnd)
+        {
+            return;
+        } // we can't load more pages, go back if you want
+
+        ResetAssets();
         CurrentPage++;
         pageNumber++;
         await GetWalletDataFull();
@@ -298,7 +309,7 @@ public class WalletLoader : MonoBehaviour
 
     public async UniTask LoadPreviousPage()
     {
-        ResetElements();
+        ResetAssets();
         CurrentPage--;
         pageNumber--;
         pageNumber = Mathf.Clamp(pageNumber, 1, Int32.MaxValue);
@@ -309,7 +320,7 @@ public class WalletLoader : MonoBehaviour
     {
         pageNumber = Mathf.Clamp(page, 1, GetTotalPages());
         CurrentPage = pageNumber;
-        ResetElements();
+        ResetAssets();
         await GetWalletDataFull();
     }
 
@@ -335,7 +346,7 @@ public class WalletLoader : MonoBehaviour
 
     public Dictionary<int, string> GetItems()
     {
-        if (coreLogic.UniqueOnly)
+        if (uniqueOnly)
         {
             return UniqueItems;
         }
@@ -345,6 +356,6 @@ public class WalletLoader : MonoBehaviour
 
     public int GetTotalPages()
     {
-        return accountTotal / TotalCanvasesToLoad;
+        return walletTotalAssetCount / TotalCanvasesToLoad;
     }
 }

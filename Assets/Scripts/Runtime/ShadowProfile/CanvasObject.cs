@@ -43,6 +43,7 @@ public class CanvasObject : MonoBehaviour
     [SerializeField] private Transform canvasBG;
     [SerializeField] private bool lookAtPlayer = false;
     private bool isFlipped = false;
+
     private void Start()
     {
         matBG = canvasBG.GetComponent<Renderer>().material;
@@ -59,7 +60,10 @@ public class CanvasObject : MonoBehaviour
     {
         isFlipped = false;
         this.transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0.0f);
-        if (url == null) { return; }
+        if (url == null)
+        {
+            return;
+        }
 
         imgUrl = url;
         detailsIndex = detailIndex;
@@ -70,12 +74,18 @@ public class CanvasObject : MonoBehaviour
     private async UniTask LoadImage(string img)
     {
         // Validate input
-        if (string.IsNullOrEmpty(imgUrl)) { return; }
+        if (string.IsNullOrEmpty(imgUrl))
+        {
+            return;
+        }
 
         // Fetch or retrieve the cached texture
         Texture2D texture = await GetOrFetchImage(img);
 
-        if(texture == null) { return; }
+        if (texture == null)
+        {
+            return;
+        }
 
         // Apply the texture to a new material
         ApplyTexture(texture);
@@ -98,13 +108,15 @@ public class CanvasObject : MonoBehaviour
         // Determine the URL to fetch the image from
         string imageURL;
 
-        if (img.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || img.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        if (img.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            img.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             imageURL = Consts.IPFS_URL + "/proxy?source=" + img; // Use the image string as it is a valid URL
         }
         else
         {
-            imageURL = Consts.IPFS_URL + img + "?preset=400x400&as_gif=true"; // Prepend with Consts.IPFS_URL as it's not a valid URL _vid_to_gif
+            imageURL = Consts.IPFS_URL + img +
+                       "?preset=400x400&as_gif=true"; // Prepend with Consts.IPFS_URL as it's not a valid URL _vid_to_gif
         }
 
         try
@@ -113,8 +125,7 @@ public class CanvasObject : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.Log(e.Message);
-            Debug.Log(imageURL);
+            Debug.LogError("Error fetching image " + imageURL + e.Message);
             throw;
         }
 
@@ -184,13 +195,14 @@ public class CanvasObject : MonoBehaviour
             Color[] pixels = texture.GetPixels();
             Color averageColor = Color.black;
 
-        for (int i = 0; i < pixels.Length; i++)
-        {
-            averageColor += pixels[i];
-        }
-        averageColor /= pixels.Length;
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                averageColor += pixels[i];
+            }
 
-        return averageColor;
+            averageColor /= pixels.Length;
+
+            return averageColor;
         }
         catch
         {
@@ -202,12 +214,12 @@ public class CanvasObject : MonoBehaviour
     {
         float multiplier = 1f + percentage;
         return new Color(Mathf.Clamp01(color.r * multiplier),
-                         Mathf.Clamp01(color.g * multiplier),
-                         Mathf.Clamp01(color.b * multiplier),
-                         color.a);
+            Mathf.Clamp01(color.g * multiplier),
+            Mathf.Clamp01(color.b * multiplier),
+            color.a);
     }
 
-    public void InitDetail ()
+    public void InitDetail()
     {
         nftDetailParent.gameObject.SetActive(true);
         nftDetailParent.alpha = 0.0f;
@@ -224,12 +236,14 @@ public class CanvasObject : MonoBehaviour
         if (aspect > 1)
         {
             // Reduce the height if aspect ratio is greater than 1
-            nftImage.rectTransform.sizeDelta = new Vector2(nftImage.rectTransform.sizeDelta.x, nftImage.rectTransform.sizeDelta.x / aspect);
+            nftImage.rectTransform.sizeDelta = new Vector2(nftImage.rectTransform.sizeDelta.x,
+                nftImage.rectTransform.sizeDelta.x / aspect);
         }
         else
         {
             // Increase the width for aspect ratio less than or equal to 1
-            nftImage.rectTransform.sizeDelta = new Vector2(nftImage.rectTransform.sizeDelta.y * aspect, nftImage.rectTransform.sizeDelta.y);
+            nftImage.rectTransform.sizeDelta = new Vector2(nftImage.rectTransform.sizeDelta.y * aspect,
+                nftImage.rectTransform.sizeDelta.y);
         }
 
         if (isFlipped)
@@ -250,7 +264,11 @@ public class CanvasObject : MonoBehaviour
         detailsIndex = -1;
         imgUrl = string.Empty;
         this.transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0.0f);
-        if(imageData == null) { return; }
+        if (imageData == null)
+        {
+            return;
+        }
+
         imageData.ImgFormat = ImageFormat.ERROR;
         imageData.FirstFrame = null;
         isFlipped = false;
@@ -268,7 +286,7 @@ public class CanvasObject : MonoBehaviour
 
 
     public void MatchPositions()
-    { 
+    {
         this.transform.position = canvasBG.position;
     }
 
@@ -291,16 +309,15 @@ public class CanvasObject : MonoBehaviour
 
     public async UniTask AnimateImage()
     {
-        
         if (imageData != null && imageData.webpAnimation != null)
         {
-                totalFrames = imageData.webpAnimation.Count;
+            totalFrames = imageData.webpAnimation.Count;
         }
-    
 
-        if (totalFrames <= 1) 
+
+        if (totalFrames <= 1)
         {
-            return; 
+            return;
         }
 
         mFrames.Clear();
@@ -308,40 +325,39 @@ public class CanvasObject : MonoBehaviour
 
         if (imageData.FirstFrame == null)
         {
-            Debug.Log("Exiting bc Firstframe eq null");
             return;
         }
 
         if (imageData.ImgFormat == ImageFormat.GIF)
         {
-            Debug.Log("Processing animated GIF for " + imgUrl);
             ProcessWEBPAnimation();
-        } else if (imageData.ImgFormat == ImageFormat.WEBP)
+        }
+        else if (imageData.ImgFormat == ImageFormat.WEBP)
         {
             ProcessWEBPAnimation();
-            this.transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 180.0f);
+            this.transform.localEulerAngles =
+                new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 180.0f);
             isFlipped = true;
         }
     }
 
     private void ProcessWEBPAnimation()
     {
-        int prevTimestamp = 0;
-        int delay;
         for (int i = 0; i < imageData.webpAnimation.Count; i++)
         {
             mFrames.Add(imageData.webpAnimation[i].Item1);
-
-            delay = imageData.webpAnimation[i].Item2 - prevTimestamp;
-            prevTimestamp = imageData.webpAnimation[i].Item2;
-            mFrameDelay.Add(delay / 1000.0f);
+            mFrameDelay.Add(imageData.webpAnimation[i].Item2 / 1000.0f);
         }
+
         imageData.Data = null;
     }
 
     private void LookAtPlayer()
     {
-        if (!lookAtPlayer) { return; }
+        if (!lookAtPlayer)
+        {
+            return;
+        }
 
         Vector3 directionToPlayer = player.transform.position - transform.position;
         directionToPlayer.y = 0;
@@ -351,7 +367,14 @@ public class CanvasObject : MonoBehaviour
         {
             // Rotate the object to face the player
             transform.rotation = Quaternion.LookRotation(directionToPlayer);
-            transform.localEulerAngles += new Vector3(0, 180, 0);
+            if (isFlipped)
+            {
+                transform.localEulerAngles += new Vector3(0, 180, 180);
+            }
+            else
+            {
+                transform.localEulerAngles += new Vector3(0, 180, 0);
+            }
         }
     }
 
@@ -359,18 +382,42 @@ public class CanvasObject : MonoBehaviour
     {
         LookAtPlayer();
 
-        Debug.LogWarning($"mFrames.Count: {mFrames.Count}, mFrameDelay.Count: {mFrameDelay.Count}, imgUrl: {imgUrl}");
+        if (core.UIState == UISTATE.LoadingState)
+        {
+            return;
+        }
 
-        if (core.UIState == UISTATE.LoadingState) { return; }
-        if (imageData == null) { return; }
+        if (imageData == null)
+        {
+            return;
+        }
 
-        if (totalFrames <= 1) { return; }
-        if (imageData.ImgFormat != ImageFormat.GIF && imageData.ImgFormat != ImageFormat.WEBP) { return; }
-        if (imageData.FirstFrame == null) { return; }
-        if (mFrames == null) { return; }
-        if (Vector3.Distance(this.transform.position, player.transform.position) > minDistanceToAnimate) { return; }
+        if (totalFrames <= 1)
+        {
+            return;
+        }
 
-        
+        if (imageData.ImgFormat != ImageFormat.GIF && imageData.ImgFormat != ImageFormat.WEBP)
+        {
+            return;
+        }
+
+        if (imageData.FirstFrame == null)
+        {
+            return;
+        }
+
+        if (mFrames == null)
+        {
+            return;
+        }
+
+        if (Vector3.Distance(this.transform.position, player.transform.position) > minDistanceToAnimate)
+        {
+            return;
+        }
+
+
         mTime += Time.deltaTime;
 
         if (mTime >= mFrameDelay[mCurFrame])

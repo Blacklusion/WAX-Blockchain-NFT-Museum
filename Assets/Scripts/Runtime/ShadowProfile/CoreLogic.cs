@@ -45,8 +45,6 @@ public class CoreLogic : MonoBehaviour
 
     public UISTATE UIState = UISTATE.WalletInput;
 
-    public bool UniqueOnly { get { return ignoreRepeated.isOn; } }
-
     private void Start()
     {
         fetchData.onClick.AddListener(() => LoadWallet());
@@ -67,41 +65,52 @@ public class CoreLogic : MonoBehaviour
 
     private void LoadNextPage()
     {
-        if (UIState != UISTATE.InGameMenu) { return; } 
+        if (UIState != UISTATE.InGameMenu)
+        {
+            return;
+        }
+
         GetNextPage().Forget();
     }
 
     private void LoadPrevPage()
     {
-        if (UIState != UISTATE.InGameMenu) { return; } 
+        if (UIState != UISTATE.InGameMenu)
+        {
+            return;
+        }
+
         GetPrevPage().Forget();
     }
 
     private void LoadSelectedPage()
     {
         if (UIState != UISTATE.InGameMenu) return;
-    
+
         int maxPage = walletLoader.GetTotalPages();
-        
+
         if (!int.TryParse(jumpPageLbl.text, out int selectedPage) || selectedPage < 1 || selectedPage > maxPage)
         {
             pageStatusLbl.text = "This page doesn't exist :(";
             return;
         }
-    
+
         // Check if the user is already on the selected page
         if (selectedPage == walletLoader.CurrentPage)
         {
             pageStatusLbl.text = "You are already on this page";
             return;
         }
-    
+
         JumpToPage().Forget();
     }
 
     private void ToggleSidebar()
     {
-        if (UIState != UISTATE.InGameMenu) { return; }
+        if (UIState != UISTATE.InGameMenu)
+        {
+            return;
+        }
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -121,10 +130,7 @@ public class CoreLogic : MonoBehaviour
                 sideBarMenu.gameObject.SetActive(true);
                 sideBarMenu.alpha = 0.0f;
                 player.UnlockMouse();
-                sideBarMenu.DOFade(1.0f, 0.3f).OnComplete(() =>
-                {
-                    UIState = UISTATE.InGameMenu;
-                });
+                sideBarMenu.DOFade(1.0f, 0.3f).OnComplete(() => { UIState = UISTATE.InGameMenu; });
             }
         }
     }
@@ -136,10 +142,6 @@ public class CoreLogic : MonoBehaviour
         loadingScreen.DOFade(1.0f, 0.3f);
         canvasManager.ResetCanvases();
         await walletLoader.LoadPreviousPage();
-        if (ignoreRepeated.isOn)
-        {
-            await walletLoader.FilterUnique();
-        }
         await canvasManager.InitCanvases();
         SetLblText();
         UIState = UISTATE.InGameMenu;
@@ -154,10 +156,6 @@ public class CoreLogic : MonoBehaviour
 
         canvasManager.ResetCanvases();
         await walletLoader.LoadNextPage();
-        if (ignoreRepeated.isOn)
-        {
-            await walletLoader.FilterUnique();
-        }
         await canvasManager.InitCanvases();
         SetLblText();
         UIState = UISTATE.InGameMenu;
@@ -182,45 +180,34 @@ public class CoreLogic : MonoBehaviour
 
     private async UniTask LoadAssets()
     {
-        if (ignoreRepeated.isOn)
-        {
-            jumpPageBtn.gameObject.SetActive(false);
-            pageLbl.gameObject.SetActive(false);
-            jumpPageLbl.gameObject.SetActive(false);
-        }
-        else
-        {
-            jumpPageBtn.gameObject.SetActive(true);
-            pageLbl.gameObject.SetActive(true);
-            jumpPageLbl.gameObject.SetActive(true);
-        }
-
         loadingScreen.gameObject.SetActive(true);
         loadingScreen.DOFade(1.0f, 0.3f);
 
         UIState = UISTATE.LoadingState;
-        await LoadDataInCollections();
         player.LockMouse();
-        await canvasManager.InitCanvases();
+        await LoadDataInCollections();
+        loadingScreen.DOFade(0.0f, 0.3f).OnComplete(() => { loadingScreen.gameObject.SetActive(false); });
+        mainUIBG.DOFade(0.0f, 0.3f).OnComplete(() => { mainUIBG.gameObject.SetActive(false); });
+        collectionsWindow.DOFade(0.0f, 0.3f).OnComplete(() => { collectionsWindow.gameObject.SetActive(false); });
         SetLblText();
         UIState = UISTATE.InGameMenu;
-        loadingScreen.DOFade(0.0f, 0.3f).OnComplete(() => { loadingScreen.gameObject.SetActive(false); });
     }
 
     private async UniTask LoadWalletCollections()
     {
-
         if (walletAddress.text.Length > 13 || walletAddress.text.Length == 0)
         {
             statusLbl.text = "Invalid wallet address";
             return;
         }
+
         try
         {
             loadingScreen.gameObject.SetActive(true);
             loadingScreen.DOFade(1.0f, 0.3f);
 
             await walletLoader.GetWalletCollections();
+            walletLoader.ResetWallet();
             await walletLoader.GetWalletCount();
 
             // Fade out the wallet window and fade in the collections window
@@ -234,18 +221,12 @@ public class CoreLogic : MonoBehaviour
             });
 
             // Fade out the loading screen
-            loadingScreen.DOFade(0.0f, 0.3f).OnComplete(() =>
-            {
-                loadingScreen.gameObject.SetActive(false);
-            });
+            loadingScreen.DOFade(0.0f, 0.3f).OnComplete(() => { loadingScreen.gameObject.SetActive(false); });
         }
         catch (Exception ex)
         {
             // Fade out the loading screen
-            loadingScreen.DOFade(0.0f, 0.3f).OnComplete(() =>
-            {
-                loadingScreen.gameObject.SetActive(false);
-            });
+            loadingScreen.DOFade(0.0f, 0.3f).OnComplete(() => { loadingScreen.gameObject.SetActive(false); });
             // Set the status label text to "error" if an exception occurs
             statusLbl.text = "Wallet not found or empty wallet";
             Debug.LogError($"An error occurred while loading wallet collections: {ex.Message}");
@@ -254,25 +235,16 @@ public class CoreLogic : MonoBehaviour
 
     private async UniTask LoadDataInCollections()
     {
-        loadingScreen.gameObject.SetActive(true);
-        loadingScreen.DOFade(1.0f, 0.3f);
-        walletLoader.ResetElements();
+        walletLoader.ResetAssets();
         walletLoader.ResetPages();
-
-        collectionsWindow.DOFade(0.0f, 0.3f).OnComplete(() =>
-        {
-            collectionsWindow.gameObject.SetActive(false);
-        });
 
         await walletLoader.GetWalletDataFull();
         if (ignoreRepeated.isOn)
         {
-            await walletLoader.FilterUnique();
+            await walletLoader.GetWalletDataUnique();
         }
-        await canvasManager.InitCanvases();
 
-        mainUIBG.DOFade(0.0f, 0.3f).OnComplete(() => { mainUIBG.gameObject.SetActive(false); });
-        loadingScreen.DOFade(0.0f, 0.3f).OnComplete(() => { loadingScreen.gameObject.SetActive(false); });
+        await canvasManager.InitCanvases();
     }
 
     private void EnterMuseum()
@@ -316,37 +288,27 @@ public class CoreLogic : MonoBehaviour
 
     private void SetLblText()
     {
-        // Hide pagination elements if 'ignoreRepeated' is on
-        if (UniqueOnly)
-        {
-            pageLbl.gameObject.SetActive(false);
-            nextPageBtn.gameObject.SetActive(false);
-            prevPageBtn.gameObject.SetActive(false);
-            jumpPageBtn.gameObject.SetActive(false);
-            jumpPageLbl.gameObject.SetActive(false);
-            return;
-        }
-    
         int totalPages = walletLoader.GetTotalPages();
         int currentPage = walletLoader.CurrentPage;
-    
-        if (totalPages <= 1)
+
+        if (totalPages <= 1 || ignoreRepeated.isOn)
         {
             pageLbl.gameObject.SetActive(false);
-            nextPageBtn.gameObject.SetActive(false);
-            prevPageBtn.gameObject.SetActive(false);
             jumpPageBtn.gameObject.SetActive(false);
             jumpPageLbl.gameObject.SetActive(false);
+
+            nextPageBtn.gameObject.SetActive(false);
+            prevPageBtn.gameObject.SetActive(false);
         }
         else
         {
             pageLbl.gameObject.SetActive(true);
             jumpPageBtn.gameObject.SetActive(true);
             jumpPageLbl.gameObject.SetActive(true);
-    
+
             prevPageBtn.gameObject.SetActive(currentPage > 1);
             nextPageBtn.gameObject.SetActive(currentPage < totalPages);
-    
+
             pageLbl.text = string.Format("Room {0}/{1}", currentPage.ToString(), totalPages.ToString());
         }
     }

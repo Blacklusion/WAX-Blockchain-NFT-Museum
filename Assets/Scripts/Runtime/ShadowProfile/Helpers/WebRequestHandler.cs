@@ -9,7 +9,8 @@ namespace ShadowProfile
 {
     public static class WebRequestHandler
     {
-        public static async UniTask<string> SendRequestAsync(string url, string method, string jsonData, string contentType = "application/json")
+        public static async UniTask<string> SendRequestAsync(string url, string method, string jsonData,
+            string contentType = "application/json")
         {
             using (UnityWebRequest request = new UnityWebRequest(url, method))
             {
@@ -24,7 +25,8 @@ namespace ShadowProfile
 
                 await request.SendWebRequest();
 
-                if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
+                if (request.result == UnityWebRequest.Result.ConnectionError ||
+                    request.result == UnityWebRequest.Result.ProtocolError)
                 {
                     Debug.LogError("Error: " + request.error);
                     return null;
@@ -53,7 +55,8 @@ namespace ShadowProfile
 
         public static async UniTask<ImageData> FetchImage(string url)
         {
-            ImageData image = new ImageData { Data = null, FirstFrame = null, ImgFormat = ImageFormat.ERROR, webpAnimation = null };
+            ImageData image = new ImageData
+                { Data = null, FirstFrame = null, ImgFormat = ImageFormat.ERROR, webpAnimation = null };
 
             try
             {
@@ -83,10 +86,9 @@ namespace ShadowProfile
             }
         }
 
-        private static async UniTask <List<(Texture2D,int)>> ProcessImageData(byte[] imageData, string url)
+        private static async UniTask<List<(Texture2D, int)>> ProcessImageData(byte[] imageData, string url)
         {
             ImageFormat format = GetImageFormat(ref imageData);
-            Debug.Log("ImageFormat: " + format + " for image" + url);
             List<(Texture2D, int)> list = new();
             switch (format)
             {
@@ -100,7 +102,8 @@ namespace ShadowProfile
                     list.Add((ProcessStandardFormat(ref imageData), 0));
                     break;
             }
-           return list;
+
+            return list;
         }
 
         public static ImageFormat GetImageFormat(ref byte[] imageData)
@@ -117,40 +120,33 @@ namespace ShadowProfile
 
             return ImageFormat.WEBP;
         }
-       private static async UniTask<List<(Texture2D, int)>> ProcessGIF(byte[] imageData, string url)
-{
-    List<(Texture2D, int)> returnList = new();
 
-    try
-    {
-        using (var decoder = new MG.GIF.Decoder(ref imageData))
+        private static async UniTask<List<(Texture2D, int)>> ProcessGIF(byte[] imageData, string url)
         {
-            int frameIndex = 0;
-            MG.GIF.Image img;
+            List<(Texture2D, int)> returnList = new();
 
-            while ((img = decoder.NextImage()) != null)
+            try
             {
-                Texture2D texture = img.CreateTexture();
-                returnList.Add((texture, frameIndex));
+                using (var decoder = new MG.GIF.Decoder(ref imageData))
+                {
+                    MG.GIF.Image img;
 
-                frameIndex++;
+                    while ((img = decoder.NextImage()) != null)
+                    {
+                        Texture2D texture = img.CreateTexture();
+                        int delay = img.Delay;
+                        returnList.Add((texture, delay));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error processing GIF: {ex.Message}");
             }
 
-            if (returnList.Count == 0)
-            {
-                Debug.Log("No valid frames found in GIF.");
-            }
+            return returnList;
         }
-    }
-    catch (Exception ex)
-    {
-        Debug.LogError($"Error processing GIF: {ex.Message}");
-    }
-    
-    Debug.Log(returnList.Count + " for image " + url);
 
-    return returnList;
-}
         private static async UniTask<List<(Texture2D, int)>> ProcessWEBP(byte[] imageData, string url)
         {
             // check if animated

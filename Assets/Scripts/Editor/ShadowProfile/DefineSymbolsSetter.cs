@@ -14,15 +14,15 @@ namespace ShadowProfile
     /// Replace with comments...
     /// </summary>
     public class DefineSymbolsSetter : EditorWindow
-	{
-		//  Events ----------------------------------------
+    {
+        //  Events ----------------------------------------
 
 
-		//  Properties ------------------------------------
+        //  Properties ------------------------------------
 
 
-		//  Fields ----------------------------------------
-		private const string MENU_ITEM_NAME01 = "Tools/[MyProject]/Define symbols setter";
+        //  Fields ----------------------------------------
+        private const string MENU_ITEM_NAME01 = "Tools/[MyProject]/Define symbols setter";
 
         //  Unity Methods ---------------------------------
         private void OnGUI()
@@ -42,14 +42,15 @@ namespace ShadowProfile
 
         //  Methods ---------------------------------------
         [MenuItem(MENU_ITEM_NAME01)]
-		public static void ShowWindow()
-		{
-			GetWindow<DefineSymbolsSetter>("Define Symbols Setter");
-		}
+        public static void ShowWindow()
+        {
+            GetWindow<DefineSymbolsSetter>("Define Symbols Setter");
+        }
 
         private void TurnDebugOff()
         {
-            PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Standalone, Consts.RELEASE_DEFINE_SYMBOL);
+            PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Standalone,
+                Consts.RELEASE_DEFINE_SYMBOL);
             Close();
         }
 
